@@ -1,0 +1,14 @@
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^(.*)$ $1.html
+
+ErrorDocument 400 http://www.google.com/400
+ErrorDocument 401 http://www.google.com/401
+ErrorDocument 403 http://www.google.com/403
+ErrorDocument 404 http://www.google.com/404
+ErrorDocument 500 http://www.google.com/500

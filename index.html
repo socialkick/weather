@@ -1,0 +1,165 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/modernizr-2.8.3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+
+
+</head>
+<body>
+<style>
+    body { width: 90%; margin: 0 auto; display: block; }
+    p { display:inline-block; margin:0px; padding:0px; }
+    button { background: #555 linear-gradient(#777, #555); color: #fff; border: 1px solid #333; padding: 3px 0.8em 4px; }
+    button:focus, button:hover { outline: none; background: linear-gradient(#555, #333); }
+    form, button, h1 { display: inline-block; }
+    input { background: rgba(0,0,0,0.15); }
+    input:focus { background: rgba(0,0,0,0.5); }
+    .results { display: none; }
+    #newCityInput.angry { background: rgba(150,0,0,0.7); border: 1px solid rgba(150,0,0,1); }
+</style>
+
+<h3>The Weather In:</h3>
+<h1 class="results"><span class="city"></span>, <span class="state"></span></h1>
+<br>
+<div class="results" style="display:none;">
+    <p>At <b><span id="time"></span><span id="amORpm"></span></b> PST, </p>
+    <p>the temperature in <span class="city"></span> is <b><span id="temperature"></span></b> degrees, </p>
+    <p>with a wind speed of <b><span id="windSpeed"></span></b> mph.</p>
+    <br><br>
+    <b><p id="sky"></p>.</b>
+</div>
+<br>
+<form id="form">
+    <input id="newCityInput" type="text" placeholder="city" maxlength="32" autofocus autocomplete="off" required />
+    <input id="newStateInput" type="text" placeholder="state" maxlength="2" autocomplete="off" required />
+</form>
+<button id="submit">Search</button>
+
+
+<script>
+    $('#form').keypress(function(e){
+        if (e.keyCode == 13) {
+            event.preventDefault();
+        }
+    });
+    var newestData = null;
+    var newZip = null
+    var currentZip = null;
+    var getNewZipCode = null;
+    var getWeatherData = null;
+
+    var submit = function(){
+        var cityChoice = "SanFrancisco";
+        var newCityInput = $('#newCityInput').val();
+        var stateChoice = "CA";
+        var newStateInput = $('#newStateInput').val();
+        var error = function(){
+            $('#newCityInput').addClass('angry').val('').focus();
+            $('#newStateInput').addClass('angry').val('');
+            return error;
+        };
+
+        if (newCityInput == false) {
+            error();
+        } else {
+            cityChoice = $('#newCityInput').val();
+            stateChoice = $('#newStateInput').val();
+
+            getNewZipCode = function(){
+                var newZipURL = "https://www.zipcodeapi.com/rest/js-mDrU9rkkUvySyufyPauQEsOyt7eckpIH3aCcBWxvr5o0ADypO3gsw41ZbgbwGUeJ/city-zips.json/" + cityChoice + "/" + stateChoice;
+//                    console.log(newZipURL);
+                $.getJSON (newZipURL, function(data) {
+                    newZip = data;
+                    console.log(newZip);
+                    currentZip = newZip.zip_codes[0];
+                    console.log(currentZip);
+
+                    if ( currentZip == undefined) {
+                        error();
+                    } else {
+                        var weatherURL = "http://api.openweathermap.org/data/2.5/weather?zip=" + currentZip + "&units=imperial&appid=badf4ba2176e65305b136f6e1dc1e2af";
+                        getWeatherData = function () {
+                            $.getJSON(weatherURL, function (data) {
+                                newestData = data;
+                                console.log(newestData);
+                                var dataMessage = data.message;
+                                if (dataMessage == "Error: Not found city") {
+                                    $('.results').css('display', 'none');
+                                    error();
+                                } else {
+                                    $('.city').text(cityChoice);
+                                    $('.state').text(stateChoice);
+                                    $('#temperature').text(data.main.temp);
+                                    $('#windSpeed').text(data.wind.speed);
+                                    $('#sky').text(data.weather[0].description);
+
+                                    var dt = new Date();
+                                    var hours = dt.getHours();
+                                    if (hours > 12) {
+                                        hours -= 12;
+                                        $('#amORpm').text("pm");
+                                    }
+                                    var time = hours + ":" + dt.getMinutes();
+                                    $('#time').text(time);
+
+                                    $('#newCityInput').removeClass('angry').val('').blur();
+                                    $('#newStateInput').val('').blur();
+                                    $('.results').css('display', 'block');
+
+                                    console.log(time);
+                                }
+                            });
+                        };
+                        getWeatherData();
+
+                    }
+                });
+            };
+            getNewZipCode();
+
+
+
+            // Update info every so often
+            var interval = 600000;
+            setInterval(getWeatherData,interval);
+
+        }
+
+    };
+    $('#submit').click(function(){
+        submit();
+    });
+    $('#newCityInput').keyup(function(e) {
+        if (e.which === 13) {
+            submit();
+        } else {
+            $(this).removeClass('angry')
+        }
+    });
+    $('#newStateInput').keyup(function(e) {
+        if (e.which === 13) {
+            submit();
+        } else {
+            $(this).removeClass('angry')
+        }
+    });
+
+
+
+</script>
+
+
+<script src="js/main.js"></script>
+
+</body>
+</html>
